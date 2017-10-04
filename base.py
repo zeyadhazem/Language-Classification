@@ -17,7 +17,7 @@ def charCount (s):
         if c > '0' and c < '9':
             continue
 
-        lower = c
+        lower = c.lower()
 
         if lower in d.keys():
             d[lower] = d[lower] + 1
