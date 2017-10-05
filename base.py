@@ -7,11 +7,9 @@ import math
 from matplotlib.ticker import FuncFormatter, MultipleLocator
 from collections import Counter
 
-d = pd.read_csv("train_set_x.csv")
-r = pd.read_csv("train_set_y.csv")
-
-data = pd.merge(d,r,how='inner',on='Id')
-data.drop("Id", axis=1, inplace=True)
+#####################################################
+#                    Functions                      #
+#####################################################
 
 def cleanup (s):
     # Parse any non strings to string
@@ -39,11 +37,8 @@ def cleanup (s):
             u'[\u2600-\u26FF\u2700-\u27BF])+',
             re.UNICODE)
 
-
     return myre.sub(r'', s).replace(" ", "")
 
-
-data['Text'] = data['Text'].apply(cleanup) # Clean the data up!
 
 def charCount (s):
     """
@@ -61,22 +56,8 @@ def charCount (s):
 
     return d
 
-data['MCL'] = data['Text'].apply(charCount)
 
-d = {}
-data.count(numeric_only=True)
-length = int (data.count(numeric_only=True))
-
-# Count the frequency of the letters by language category
-for i in range(0, length - 1):
-
-    cat = str (data['Category'][i])
-    if cat in d.keys():
-        d[cat] = dict (Counter(d[cat]) + Counter(data['MCL'][i]))
-    else:
-        d[cat] = data['MCL'][i]
-
-def printbar (h, legend):
+def draw_bars (h, legend):
     lists = sorted(h.items()) # sorted by key, return a list of tuples
 
     x_ticks_labels, y = zip(*lists) # unpack a list of pairs into two tuples
@@ -111,13 +92,6 @@ def normalize (d):
 
     return h
 
-for key in d.keys():
-    h = dict(d[key]) # Validating and normalizing just by looking at each language on its own
-    h = normalize(h)
-    printbar(h, key)
-#     printbar(dict(d[key]), key)
-
-
 def docFrequency (d):
 
     df = {}
@@ -144,22 +118,67 @@ def inverseDocFrequency (d):
 
     return df
 
+def draw_multiple_bars(d, normalized):
+    for key in d.keys():
+        h = dict(d[key]) # Validating and normalizing just by looking at each language on its own
+        if normalized:
+            h = normalize(h)
 
+        draw_bars(h, key)
+
+def compute_tf_idf(tf, idf):
+    # Get the tf idf Now all we need to do is for every language, multiply the tf by idf
+    tfidf = d.copy()
+    for language in tfidf:
+        temp = tfidf[language]
+        for letter in temp:
+            temp[letter] = temp[letter] * idf[letter] # Will not throw an error since all letters are contained in idf
+
+    return tfidf
+
+
+#####################################################
+#                       Logic                       #
+#####################################################
+
+d = pd.read_csv("train_set_x.csv")
+r = pd.read_csv("train_set_y.csv")
+
+# Building joining x and y tables
+data = pd.merge(d,r,how='inner',on='Id')
+data.drop("Id", axis=1, inplace=True)
+
+# Cleanup the data
+data['Text'] = data['Text'].apply(cleanup)
+
+# Get the char count for every string in the table
+data['MCL'] = data['Text'].apply(charCount)
+
+# Count the frequency of the letters by language category
+d = {}
+data.count(numeric_only=True)
+length = int (data.count(numeric_only=True))
+for i in range(0, length - 1):
+    lang = str (data['Category'][i])
+    if lang in d.keys():
+        d[lang] = dict (Counter(d[lang]) + Counter(data['MCL'][i]))
+    else:
+        d[lang] = data['MCL'][i]
+
+# Get the inverse document frequency
 idf = inverseDocFrequency(d)
+tfidf = compute_tf_idf(d, idf)
 
-# Now all we need to do is for every language, multiply the tf by idf
-tfidf = d.copy()
-for language in tfidf:
-    temp = tfidf[language]
-    for letter in temp:
-        temp[letter] = temp[letter] * idf[letter] # Will not throw an error since all letters are contained in idf
+# Non Normalized TF
+draw_multiple_bars(d, False)
 
+# Normalized TF
+draw_multiple_bars(d, True)
 
-for key in tfidf.keys():
-    h = dict(tfidf[key]) # Validating and normalizing just by looking at each language on its own
-    h = normalize(h)
-    printbar(h, key)
-    for letter in h:
-        print (letter)
+# Non Normalized TFIDF
+draw_multiple_bars(tfidf, False)
+
+# Normalized TFIDF
+draw_multiple_bars(tfidf, True)
 
 # data.to_csv("out.csv", encoding="utf-8")
