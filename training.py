@@ -1,4 +1,3 @@
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report,confusion_matrix
 from sklearn.metrics import accuracy_score
@@ -6,14 +5,14 @@ from preprocessor import Preprocessor
 import pandas as pd
 
 class Training:
-    def __init__(self, X, y, feature_extraction_pipeline):
+    def __init__(self, X, y, feature_extraction_pipeline, model):
         self.X = X
         self.y = y
         self.feature_extraction_pipeline = feature_extraction_pipeline
+        self.model = model
+
 
     def train (self, validation):
-        print("> Getting the features from test set")
-
         if validation:
             # split training set into train and validate
             print("> Separating training set into train and validation")
@@ -39,19 +38,18 @@ class Training:
 
         # Train model
         print("> Training the model")
-        rfc = RandomForestClassifier(n_estimators=400)
-        rfc.fit(X_train, y_train.values.ravel())
-        rfc_pred = rfc.predict(X_test)
+        self.model.fit(X_train, y_train.values.ravel())
+        prediction = self.model.predict(X_test)
 
         if validation:
-            print(confusion_matrix(y_test, rfc_pred))
+            print(confusion_matrix(y_test, prediction))
             print('\n')
-            print(classification_report(y_test, rfc_pred))
-            print(accuracy_score(y_test, rfc_pred))
+            print(classification_report(y_test, prediction))
+            print(accuracy_score(y_test, prediction))
 
         else:
             print("> Exporting")
-            results = pd.DataFrame({'Category':rfc_pred})
+            results = pd.DataFrame({'Category':prediction})
             results.index.names = ['Id']
 
             results.to_csv("results.csv")

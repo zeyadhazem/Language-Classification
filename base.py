@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 
 from preprocessor import Preprocessor
 from tf import TF
@@ -35,7 +36,7 @@ for feature_extractor in feature_extraction_pipeline:
 # No need for text column anymore, since the features were extracted
 X.drop('Text', axis=1, inplace=True)
 
-Training(X,y,feature_extraction_pipeline).train(validation=False)
+Training(X,y,feature_extraction_pipeline, RandomForestClassifier(n_estimators=400)).train(validation=True)
 
 print("> Done")
 
