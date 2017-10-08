@@ -13,3 +13,5 @@ train_set_y.csv
 .idea/
 
 *.ipynb
+
+*.pyc

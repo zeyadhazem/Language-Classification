@@ -1,184 +1,75 @@
-import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
-import re
-import math
+from sklearn.ensemble import RandomForestClassifier
 
-from matplotlib.ticker import FuncFormatter, MultipleLocator
-from collections import Counter
+from preprocessor import Preprocessor
+from tf import TF
+from tfidf import TFIDF
 
-#####################################################
-#                    Functions                      #
-#####################################################
+print("> Loading training set")
 
-def cleanup (s):
-    # Parse any non strings to string
-    s = str(s)
+X = pd.read_csv("train_set_x.csv")
+y = pd.read_csv("train_set_y.csv")
 
-    # Convert to unicode
-    s = unicode(s,"utf-8")
+# X = X.truncate(after=10000)
+# y = y.truncate(after=10000)
 
-    # Remove all digits from string
-    s = re.sub("\d+", "", s)
+X.drop('Id', axis=1, inplace=True)
+y.drop('Id', axis=1, inplace=True)
 
-    # Remove all emojis and non letter characters
-    try:
-        # Wide UCS-4 build
-        myre = re.compile(u'['
-            u'\U0001F300-\U0001F64F'
-            u'\U0001F680-\U0001F6FF'
-            u'\u2600-\u26FF\u2700-\u27BF]+',
-            re.UNICODE)
-    except re.error:
-        # Narrow UCS-2 build
-        myre = re.compile(u'('
-            u'\ud83c[\udf00-\udfff]|'
-            u'\ud83d[\udc00-\ude4f\ude80-\udeff]|'
-            u'[\u2600-\u26FF\u2700-\u27BF])+',
-            re.UNICODE)
+X_train = X
+y_train = y
 
-    return myre.sub(r'', s).replace(" ", "")
+preprocessor = Preprocessor()
+preprocessor.process(X_train, inplace=True)
 
+print("> Creating feature extraction pipeline")
 
-def charCount (s):
-    """
-    Takes in a unicode string representing a string
-    Returns a dict with letters as keys and their number of occurence as values
-    """
-    d = {}
-    for each in s:
-        lower = each.lower()
+feature_extraction_pipeline = []
+feature_extraction_pipeline.append(TF(X_train))
+feature_extraction_pipeline.append(TFIDF(X_train, category_df=y_train))
 
-        if lower in d.keys():
-            d[lower] = d[lower] + 1
-        else:
-            d[lower] = 1
+print("> Extracting features from training set")
 
-    return d
+# Use the pipeline to extract features
+for feature_extractor in feature_extraction_pipeline:
+    extracted_features = feature_extractor.extractFeatures()
+    X_train = pd.concat([X_train, feature_extractor.addPrefix(extracted_features)], axis=1)
 
+print("> Training the model")
 
-def draw_bars (h, legend):
-    lists = sorted(h.items()) # sorted by key, return a list of tuples
+# No need for text column anymore, since the features were extracted
+X_train = X_train.drop('Text', axis=1)
 
-    x_ticks_labels, y = zip(*lists) # unpack a list of pairs into two tuples
-    x = np.array(np.arange(0,len(x_ticks_labels)))
+# Strat classification
+rfc = RandomForestClassifier(n_estimators=200)
+rfc.fit(X_train, y_train.values.ravel())
 
-    plt.figure(figsize=(20,4))
-    plt.bar(np.arange(0,len(h)), h.values(), color='g')
-    plt.xticks(x, h.keys())
-    plt.legend(legend)
-    plt.show()
+print("> Setting up the test set")
 
-def normalize (d):
-    """
-    Takes in a dictionary containing all the letters organized by language category
-    calculates the frequency of each letter by language category
-    Returns a dict containing the normalized freq of letters whose freq > uniform distribution prob
-    """
-    total_count = sum(d.values())
-    add = 0
-    h = d.copy()
+# Apply feature extraction to test set
+X_test = pd.read_csv('test_set_x.csv')
+X_test.drop('Id', axis=1, inplace=True)
+preprocessor.process(X_test, inplace=True)
 
-    for key in h.keys():
-        h[key] = float(h[key])/total_count
-        add = add + h[key]
+print("> Getting the features from test set")
 
-    print(add, len(h))
-    uniform = add/len(h) # if uniformly distributed
-    for key in h.keys():
-        # Truncate anything that has a rec value less than uniform
-        if (h[key] < uniform):
-            del h[key]
+for feature_extractor in feature_extraction_pipeline:
+    applied_features = feature_extractor.applyToTest(X_test)
+    X_test = pd.concat([X_test, feature_extractor.addPrefix(applied_features)], axis=1)
 
-    return h
+# No need for the text column anymore
+X_test = X_test.drop('Text', axis=1)
 
-def docFrequency (d):
+print("> Predicting")
 
-    df = {}
-    for language in d:
-        for letter in d[language]:
-            if letter in df:
-                df[letter] = df[letter] + 1
-            else:
-                df[letter] = 1
+rfc_pred = rfc.predict(X_test)
 
-    return df
+print("> Exporting")
 
+results = pd.DataFrame({'Category':rfc_pred})
+results.index.names = ['Id']
 
-def inverseDocFrequency (d):
-    """
-    Takes in a dictionary containing all the letters organized by language category
-    Returns a dictionary where the keys are the letters and the values are the idf
-    """
-    df = docFrequency(d)
-    length = float(len(d))
+results.to_csv("results.csv")
 
-    for letter in df:
-        df[letter] = math.log10(length/df[letter])
+print("> Done")
 
-    return df
-
-def draw_multiple_bars(d, normalized):
-    for key in d.keys():
-        h = dict(d[key]) # Validating and normalizing just by looking at each language on its own
-        if normalized:
-            h = normalize(h)
-
-        draw_bars(h, key)
-
-def compute_tf_idf(tf, idf):
-    # Get the tf idf Now all we need to do is for every language, multiply the tf by idf
-    tfidf = d.copy()
-    for language in tfidf:
-        temp = tfidf[language]
-        for letter in temp:
-            temp[letter] = temp[letter] * idf[letter] # Will not throw an error since all letters are contained in idf
-
-    return tfidf
-
-
-#####################################################
-#                       Logic                       #
-#####################################################
-
-d = pd.read_csv("train_set_x.csv")
-r = pd.read_csv("train_set_y.csv")
-
-# Building joining x and y tables
-data = pd.merge(d,r,how='inner',on='Id')
-data.drop("Id", axis=1, inplace=True)
-
-# Cleanup the data
-data['Text'] = data['Text'].apply(cleanup)
-
-# Get the char count for every string in the table
-data['MCL'] = data['Text'].apply(charCount)
-
-# Count the frequency of the letters by language category
-d = {}
-data.count(numeric_only=True)
-length = int (data.count(numeric_only=True))
-for i in range(0, length - 1):
-    lang = str (data['Category'][i])
-    if lang in d.keys():
-        d[lang] = dict (Counter(d[lang]) + Counter(data['MCL'][i]))
-    else:
-        d[lang] = data['MCL'][i]
-
-# Get the inverse document frequency
-idf = inverseDocFrequency(d)
-tfidf = compute_tf_idf(d, idf)
-
-# Non Normalized TF
-draw_multiple_bars(d, False)
-
-# Normalized TF
-draw_multiple_bars(d, True)
-
-# Non Normalized TFIDF
-draw_multiple_bars(tfidf, False)
-
-# Normalized TFIDF
-draw_multiple_bars(tfidf, True)
-
-# data.to_csv("out.csv", encoding="utf-8")
