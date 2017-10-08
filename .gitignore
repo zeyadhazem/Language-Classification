@@ -15,3 +15,5 @@ train_set_y.csv
 *.ipynb
 
 *.pyc
+
+*.csv
