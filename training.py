@@ -11,7 +11,7 @@ class Training:
         self.y = y
         self.feature_extraction_pipeline = feature_extraction_pipeline
 
-    def train (self, validation, export):
+    def train (self, validation):
         print("> Getting the features from test set")
 
         if validation:
@@ -49,8 +49,7 @@ class Training:
             print(classification_report(y_test, rfc_pred))
             print(accuracy_score(y_test, rfc_pred))
 
-
-        if export:
+        else:
             print("> Exporting")
             results = pd.DataFrame({'Category':rfc_pred})
             results.index.names = ['Id']

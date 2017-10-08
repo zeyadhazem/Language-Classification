@@ -35,7 +35,7 @@ for feature_extractor in feature_extraction_pipeline:
 # No need for text column anymore, since the features were extracted
 X.drop('Text', axis=1, inplace=True)
 
-Training(X,y,feature_extraction_pipeline).train(validation=True, export=False)
+Training(X,y,feature_extraction_pipeline).train(validation=False)
 
 print("> Done")
 
