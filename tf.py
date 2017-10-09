@@ -15,7 +15,7 @@ class TF (FeatureExtractor):
         column = self.train_set.columns[0]
 
         for i in range (0, rows_len):
-            string = self.train_set[column][i]
+            string = self.train_set[column][i].replace(" ","")
             string_len = len(string)
 
             for letter in string:
@@ -43,7 +43,7 @@ class TF (FeatureExtractor):
         # Get unique chars with the same dimensions as in the test set
         column = test_df.columns[0]
         for i in range (0, test_df_len):
-            string = test_df[column][i]
+            string = test_df[column][i].replace(" ","")
             string_len = len(string)
 
             for letter in string:
