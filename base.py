@@ -4,6 +4,7 @@ from sklearn.ensemble import RandomForestClassifier
 from preprocessor import Preprocessor
 from tf import TF
 from tfidf import TFIDF
+from ngrams import NGRAMS
 
 print("> Loading training set")
 
@@ -27,6 +28,7 @@ print("> Creating feature extraction pipeline")
 feature_extraction_pipeline = []
 feature_extraction_pipeline.append(TF(X_train))
 feature_extraction_pipeline.append(TFIDF(X_train, category_df=y_train))
+feature_extraction_pipeline.append(NGRAMS(X_train))
 
 print("> Extracting features from training set")
 
