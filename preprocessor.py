@@ -17,9 +17,10 @@ class Preprocessor:
 
     def cleanup (self, s):
         s = self.convert_to_UTF(s) # Mandatory
-        s = self.remove_spaces(s)
+        s = self.removeLinksAndSpaces(s)
+        # s = self.remove_spaces(s)
         s = self.remove_digits(s)
-        s = self.remove_emojis(s)
+        # s = self.remove_emojis(s)
 
         return s
 
@@ -28,6 +29,18 @@ class Preprocessor:
         s = unicode(s,"utf-8")
 
         return s
+
+    def removeLinksAndSpaces(self, s):
+        # Lower case
+        string = s.lower().split()
+        recreated = ''
+
+        for word in string:
+            if 'http' not in word:
+                recreated = recreated + word
+
+        return recreated
+
 
     def remove_spaces(self, s):
         return s.replace(" ","")

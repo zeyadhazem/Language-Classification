@@ -28,7 +28,7 @@ class Training:
             Preprocessor().process(X_test, inplace=True)
 
             # Apply processing on test set
-            print("> Extracting Features from test set")
+            print("> Extracting features from test set")
             for feature_extractor in self.feature_extraction_pipeline:
                 applied_features = feature_extractor.applyToTest(X_test)
                 X_test = pd.concat([X_test, feature_extractor.addPrefix(applied_features)], axis=1)

@@ -1,5 +1,8 @@
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import LinearSVC
+from sklearn.grid_search import GridSearchCV
 
 from preprocessor import Preprocessor
 from tf import TF
@@ -20,6 +23,8 @@ y.drop('Id', axis=1, inplace=True)
 preprocessor = Preprocessor()
 preprocessor.process(X, inplace=True)
 
+X.to_csv('cleanedup.csv', encoding="utf-8")
+
 print("> Creating feature extraction pipeline")
 
 feature_extraction_pipeline = []
@@ -36,7 +41,15 @@ for feature_extractor in feature_extraction_pipeline:
 # No need for text column anymore, since the features were extracted
 X.drop('Text', axis=1, inplace=True)
 
-Training(X,y,feature_extraction_pipeline, RandomForestClassifier(n_estimators=400)).train(validation=True)
+# Training(X,y,feature_extraction_pipeline, RandomForestClassifier(n_estimators=100)).train(validation=True)
+Training(X,y,feature_extraction_pipeline, RandomForestClassifier(n_estimators=200, verbose=3)).train(validation=False)
+# Training(X,y,feature_extraction_pipeline, KNeighborsClassifier(n_neighbors=3)).train(validation=True)
+
+# svc = LinearSVC()
+# param_grid = {'C': [0.1,1, 10, 100, 1000], 'gamma': [1,0.1,0.01,0.001,0.0001], 'kernel': ['rbf']}
+# param_grid = {'C': [0.01, 0.1,1, 10, 100, 1000, 10000]}
+# grid = GridSearchCV(LinearSVC(),param_grid,refit=True,verbose=3)
+# Training(X,y,feature_extraction_pipeline, grid).train(validation=False)
 
 print("> Done")
 
