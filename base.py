@@ -1,9 +1,5 @@
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import LinearSVC
-from sklearn.grid_search import GridSearchCV
-from naivebayesclassifier import NaiveBayesClassifier
+from sklearn.ensemble import ExtraTreesClassifier
 
 from preprocessor import Preprocessor
 from tf import TF
@@ -15,8 +11,8 @@ print("> Loading training set")
 X = pd.read_csv("train_set_x.csv")
 y = pd.read_csv("train_set_y.csv")
 
-X = X.truncate(after=1000)
-y = y.truncate(after=1000)
+X = X.truncate(after=10000)
+y = y.truncate(after=10000)
 
 X.drop('Id', axis=1, inplace=True)
 y.drop('Id', axis=1, inplace=True)
@@ -42,9 +38,8 @@ for feature_extractor in feature_extraction_pipeline:
 # No need for text column anymore, since the features were extracted
 X.drop('Text', axis=1, inplace=True)
 
-# Start training
-# Training(X,y,feature_extraction_pipeline, RandomForestClassifier(n_estimators=10, verbose=3)).train(validation=True)
-Training(X,y,feature_extraction_pipeline, NaiveBayesClassifier()).train(validation=True)
+# Training(X,y,feature_extraction_pipeline, RandomForestClassifier(n_estimators=200, verbose=3)).train(validation=True, featureSelect = False)
+Training(X,y,feature_extraction_pipeline, ExtraTreesClassifier(n_estimators=200, verbose=3)).train(validation=True, featureSelect = True)
+
 
 print("> Done")
-
