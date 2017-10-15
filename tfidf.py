@@ -18,6 +18,14 @@ class TFIDF (FeatureExtractor):
         idf = self.get_idf()
         return_df = self.tf_df.mul(idf, axis=1)
 
+        # Remove columns with 0s from return_df
+        i = 0
+        for value in idf:
+            if value == 0:
+                return_df.drop(return_df.columns[i],axis=1,inplace=True)
+            else:
+                i = i + 1
+
         return return_df
 
     def get_idf(self):
@@ -40,4 +48,14 @@ class TFIDF (FeatureExtractor):
 
     def applyToTest(self, test_df):
         tf_df = self.tf.applyToTest(test_df)
-        return tf_df.mul(self.get_idf(), axis=1)
+        return_df = tf_df.mul(self.get_idf(), axis=1)
+
+        # Remove columns with 0s from return_df
+        i = 0
+        for value in self.idf:
+            if value == 0:
+                return_df.drop(return_df.columns[i],axis=1,inplace=True)
+            else:
+                i = i + 1
+
+        return return_df

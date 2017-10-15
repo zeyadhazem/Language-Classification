@@ -17,8 +17,8 @@ class Preprocessor:
 
     def cleanup (self, s):
         s = self.convert_to_UTF(s) # Mandatory
-        s = self.removeLinksAndSpaces(s)
-        # s = self.remove_spaces(s)
+        # s = self.removeLinksAndSpaces(s)
+        s = self.remove_spaces(s)
         s = self.remove_digits(s)
         # s = self.remove_emojis(s)
 
