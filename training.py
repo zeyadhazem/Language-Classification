@@ -14,11 +14,11 @@ class Training:
         self.feature_extraction_pipeline = feature_extraction_pipeline
         self.model = model
 
-    def train (self, validation, num_features=None):
+    def train (self, validation, num_features=None, random_state=None):
         if validation:
             # split training set into train and validate
             print("> Separating training set into train and validation")
-            X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.3)
+            X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.3, random_state=random_state)
 
         else:
             X_train = self.X
