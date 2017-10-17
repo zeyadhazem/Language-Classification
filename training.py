@@ -14,7 +14,7 @@ class Training:
         self.feature_extraction_pipeline = feature_extraction_pipeline
         self.model = model
 
-    def train (self, validation, featureSelect):
+    def train (self, validation, num_features=None):
         if validation:
             # split training set into train and validate
             print("> Separating training set into train and validation")
@@ -38,11 +38,11 @@ class Training:
             # No need for the text column anymore
             X_test = X_test.drop('Text', axis=1)
 
-        if featureSelect:
-            featureSelection = SelectKBest(chi2, k=250)
+        if num_features:
+            featureSelection = SelectKBest(chi2, k=num_features)
             X_train = pd.DataFrame(featureSelection.fit_transform(X_train, y_train))
             X_test = pd.DataFrame(featureSelection.transform(X_test))
-            print("hello", X_train.shape, X_test.shape)
+            print("Feature Selection: X_train:", X_train.shape, "X_test:", X_test.shape)
 
         # Train model
         print("> Training the model")
