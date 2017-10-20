@@ -42,8 +42,8 @@ class Training:
             featureSelection = SelectKBest(chi2, k=num_features)
             X_train = pd.DataFrame(featureSelection.fit_transform(X_train, y_train))
             X_test = pd.DataFrame(featureSelection.transform(X_test))
-            print("Feature Selection: X_train:", X_train.shape, "X_test:", X_test.shape)
 
+        print("Feature Selection: X_train:", X_train.shape, "X_test:", X_test.shape)
         # Train model
         print("> Training the model")
         self.model.fit(X_train, y_train.values.ravel())

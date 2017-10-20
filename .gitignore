@@ -11,3 +11,4 @@ random_baseline.csv
 *.pyc
 
 random_baseline.csv
+*.csv
