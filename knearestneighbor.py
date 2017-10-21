@@ -1,10 +1,12 @@
 from classifier import Classifier
 from collections import Counter
+import numpy as np
 import math
 
 class KNearestNeighbor(Classifier):
 
 	def __init__(self, K=None, wfunc=None):
+		print "> Using K Nearest Neighbor Classifier"
 		self.X_train = {}
 		self.Y_train = []
 		self.K = K
@@ -37,6 +39,8 @@ class KNearestNeighbor(Classifier):
 			c,p = getPrediction(test_set.iloc[row])
 			prediction.append(c)
 
+		print ""
+
 		return prediction
 
 	def getDistanceWeight(self, data_x, new_x, wfunc):
@@ -63,12 +67,11 @@ class KNearestNeighbor(Classifier):
 
 	def getEuclideanDistance(self, data_x, new_x):
 		""" Takes 2 pandas.Series objects: data_x and new_x """
-		d = 0
+		#for p, q in zip(data_x, new_x):
+		#	d += (p - q)**2
 
-		for p, q in zip(data_x, new_x):
-			d += (p - q)**2
-
-		return math.sqrt(d)
+		#return math.sqrt(d)
+		return  np.sqrt(np.sum(np.square(data_x - new_x))) #optimization
 
 	def getNearestNeighborsPrediction(self, X_train, Y_train, new_x, k):
 		""" Takes pandas.DataFrame: X_train; numpy.ndarry: Y_train, pandas.Series new_x; and int: k"""
