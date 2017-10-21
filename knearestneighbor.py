@@ -33,6 +33,7 @@ class KNearestNeighbor(Classifier):
 				return self.getDWNeighborsPrediction(self.X_train, self.Y_train, test_row, self.wfunc)
 
 		for row in range(len(test_set.index)):
+			print row,
 			c,p = getPrediction(test_set.iloc[row])
 			prediction.append(c)
 
