@@ -8,6 +8,7 @@ class NaiveBayesClassifier(Classifier):
 		"""
 		You should pass in any arguments that you think will need for your classifier
 		"""
+		print "> Using Naive Bayes Classifier"
 		self.prob_given = {}
 		self.prob_of = {}
 
