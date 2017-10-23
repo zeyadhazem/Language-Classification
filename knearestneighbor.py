@@ -1,16 +1,19 @@
 from classifier import Classifier
 from collections import Counter
+from sklearn.neighbors import KDTree
 import numpy as np
 import math
 
 class KNearestNeighbor(Classifier):
 
-	def __init__(self, K=None, wfunc=None):
+	def __init__(self, K=None, wfunc=None, optimization=None):
 		print "> Using K Nearest Neighbor Classifier"
 		self.X_train = {}
 		self.Y_train = []
 		self.K = K
 		self.wfunc = wfunc
+		self.optimization = optimization
+		self.tree = None
 
 	def fit(self, X, y):
 		"""
@@ -18,8 +21,11 @@ class KNearestNeighbor(Classifier):
 		y: A dataframe containing the categories of each entry x
 		"""
 
-		self.X_train = X
+		self.X_train = X.reset_index(drop=True)
 		self.Y_train = y
+
+		if self.optimization == 'kdtree':
+			self.tree = KDTree(X)
 
 		return
 
@@ -75,22 +81,29 @@ class KNearestNeighbor(Classifier):
 
 	def getNearestNeighborsPrediction(self, X_train, Y_train, new_x, k):
 		""" Takes pandas.DataFrame: X_train; numpy.ndarry: Y_train, pandas.Series new_x; and int: k"""
-		d = {}
-
-		for row, series in X_train.iterrows():
-			d[row] = self.getEuclideanDistance(series, new_x)
-
-		sorted_d = sorted(d.iteritems(), key = lambda (k,v) : (v,k))
-
 		neighbors = []
 
-		for i in range(k):
-			row, distance = sorted_d[i]
-			neighbors.append(Y_train[row])
+		if self.optimization == 'kdtree':
+			distances, neighbors = self.tree.query([new_x], k=k)
+			neighbors = [Y_train[n] for n in neighbors[0]]
+		else:
+			d = {}
+
+			for i in range(len(X_train.index)):
+				d[i] = self.getEuclideanDistance(X_train.iloc[i], new_x)
+
+			sorted_d = sorted(d.iteritems(), key = lambda (k,v) : (v,k))
+
+
+			for i in range(k):
+				row, distance = sorted_d[i]
+				neighbors.append(Y_train[row])
+
+		#print neighbors
 
 		c = Counter(neighbors)
 		class_value = c.most_common(1)[0][0]
-		likehood = c.most_common(1)[0][1] / float(len(neighbors))
+		likelihood = c.most_common(1)[0][1] / float(len(neighbors))
 
-		return (class_value, likehood)
+		return (class_value, likelihood)
 
